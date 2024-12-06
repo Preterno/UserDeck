@@ -1,8 +1,18 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 function UserCard({ id, email, first_name, last_name, avatar }) {
+  const navigate = useNavigate();
+
   const handleClick = () => {
-    console.log(id, email, first_name, last_name, avatar);
+    navigate(`/edit/${id}`, {
+      state: {
+        id: id,
+        email: email,
+        first_name: first_name,
+        last_name: last_name,
+      },
+    });
   };
   return (
     <div

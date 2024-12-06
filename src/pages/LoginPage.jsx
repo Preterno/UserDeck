@@ -1,7 +1,9 @@
 import React from "react";
 import { Formik, Field, ErrorMessage, Form } from "formik";
+import { useAuth } from "../Authenticate";
 import * as Yup from "yup";
 import LoadingIcon from "../components/LoadingIcon";
+import LoadingScreen from "./LoadingScreen";
 
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Email is required"),
@@ -11,6 +13,13 @@ const LoginSchema = Yup.object().shape({
 });
 
 function LoginPage() {
+  const { isAuthenticated, login, loading } = useAuth();
+  console.log(isAuthenticated);
+
+  if (loading || isAuthenticated) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="flex h-full w-full justify-center items-center">
       <Formik
@@ -20,10 +29,8 @@ function LoginPage() {
         }}
         validationSchema={LoginSchema}
         onSubmit={(values, { setSubmitting }) => {
-          setTimeout(() => {
-            console.log(values);
-            setSubmitting(false);
-          }, 2000);
+          login(values.email, values.password);
+          setSubmitting(false);
         }}
       >
         {({ isSubmitting }) => (

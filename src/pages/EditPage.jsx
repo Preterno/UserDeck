@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { Formik, Field, ErrorMessage, Form } from "formik";
+import axios from "axios";
 import * as Yup from "yup";
 import LoadingIcon from "../components/LoadingIcon";
 import showToast from "../components/Notification";
+import { useAuth } from "../Authenticate";
+import LoadingScreen from "./LoadingScreen";
 
 const EditSchema = Yup.object().shape({
   email: Yup.string().email("Invalid email").required("Email is required"),
@@ -14,49 +18,116 @@ const EditSchema = Yup.object().shape({
     .required("Last name is required"),
 });
 
-function EditPage({
-  id,
-  first_name = "Aslam",
-  last_name = "abc",
-  email = "xyz@gmail.com",
-}) {
+function EditPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isError, setIsError] = useState(false);
+  const [userData, setUserData] = useState({
+    email: "",
+    first_name: "",
+    last_name: "",
+  });
 
-  const handleDelete = () => {
-    setIsDeleting(true);
-    setIsError(true);
-    setTimeout(() => {
-      console.log(`User with ID ${id} deleted`);
-      setIsDeleting(false);
-    }, 1000);
-  };
+  const { id } = useParams();
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const { setLoading, loading } = useAuth();
+  const base_url = import.meta.env.VITE_API_BASE_URL;
 
-  const handleUpdate = (values) => {
-    setIsUpdating(true);
-    setTimeout(() => {
-      console.log("Updated Values:", values);
-      setIsUpdating(false);
-    }, 2000);
-  };
-  React.useEffect(() => {
-    if (isError) {
-      showToast("Testing", { type: "success" }); 
-      setIsError(false);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!id) {
+        showToast("Invalid user ID", { type: "error" });
+        navigate("/");
+        return;
+      }
+      try {
+        setLoading(true);
+        const response = await axios.get(`${base_url}api/users/${id}`);
+        setUserData({
+          email: response.data.data.email,
+          first_name: response.data.data.first_name,
+          last_name: response.data.data.last_name,
+        });
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          showToast("User not found", { type: "error" });
+          navigate('/');
+        } else {
+          showToast(error.message || "An error occurred while fetching user", { type: "error" });
+          console.error(error);
+          navigate('/');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (state && state.first_name && state.last_name && state.email) {
+      setUserData({
+        first_name: state.first_name,
+        last_name: state.last_name,
+        email: state.email,
+      });
+    } else {
+      fetchUserData();
     }
-  }, [isError]);
+  }, [state, id, navigate, setLoading]);
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await axios.delete(`${base_url}api/users/${id}`);
+      setUserData({
+        email: "",
+        first_name: "",
+        last_name: "",
+      });
+      console.log(response);
+      showToast("User successfully deleted", { type: "success" });
+      navigate("/");
+    } catch (error) {
+      showToast(error, { type: "error" });
+      console.log(error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleUpdate = async (values) => {
+    setIsUpdating(true);
+    try {
+      const { email, first_name, last_name } = values;
+      const response = await axios.put(`${base_url}api/users/${id}`, {
+        email,
+        first_name,
+        last_name,
+      });
+      setUserData({
+        email: response.data.email,
+        first_name: response.data.first_name,
+        last_name: response.data.last_name,
+      });
+      console.log(response);
+      showToast("User details successfully updated", { type: "success" });
+    } catch (error) {
+      showToast(error, { type: "error" });
+      console.log(error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   return (
     <div className="flex h-full w-full justify-center items-center">
       <Formik
-        initialValues={{
-          email: email,
-          first_name: first_name,
-          last_name: last_name,
-        }}
+        initialValues={userData}
         validationSchema={EditSchema}
         onSubmit={handleUpdate}
+        enableReinitialize
       >
         {({ isSubmitting, values }) => (
           <div className="w-full max-w-sm px-8 py-12 pb-14 bg-white rounded-2xl shadow-xl hover:shadow-2xl max-sm:max-w-xs max-sm:px-4">
