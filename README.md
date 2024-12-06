@@ -3,6 +3,9 @@
 ## Overview
 UserDeck is a React-based application for user management that integrates with the Reqres API. It allows users to log in, view a list of users with pagination, and edit or delete user details.
 
+## Deployment
+Currently, the site is hosted at https://userdeckapp.netlify.app/.
+
 ## Features
 - **Secure Authentication**: Login with predefined credentials. The login token is stored in localStorage for session persistence, ensuring the user remains logged in across page reloads.
 - **Dynamic User Management**: 
