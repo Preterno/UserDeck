@@ -49,9 +49,9 @@ VITE_API_BASE_URL=https://reqres.in/api
 
 ### 4. Run the Application
 ```bash
-npm start
+npm run dev
 ```
-The application will be available at `http://localhost:3000`
+The application will be available at `http://localhost:5173`
 
 ## Connect with Me
 Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/aslam8483).
